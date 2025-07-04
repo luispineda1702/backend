@@ -21,6 +21,9 @@ app.use('/api/pizzas', pizzasRoutes);
 const promocionesRoutes = require('./routes/promociones');
 app.use('/api/promociones', promocionesRoutes);
 
+const pedidosRoutes = require('./routes/pedidos');
+app.use(express.json());
+app.use('/api', pedidosRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 3000;
