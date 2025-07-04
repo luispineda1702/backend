@@ -15,6 +15,13 @@ res.send('API funcionando');
 const userRoutes = require('./routes/user');
 app.use('/api/users', userRoutes);
 
+const pizzasRoutes = require('./routes/pizzas');
+app.use('/api/pizzas', pizzasRoutes);
+
+const promocionesRoutes = require('./routes/promociones');
+app.use('/api/promociones', promocionesRoutes);
+
+
 // Puerto
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
