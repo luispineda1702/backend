@@ -22,6 +22,9 @@ const promoProdRoutes = require('./routes/promocionProductoRoutes');
 const insumosRoutes = require('./routes/insumoRoutes');
 const pedidoDetalleRoutes = require('./routes/pedidoDetalleRoutes');
 const productoInsumoRoutes = require('./routes/productoInsumoRoutes');
+const repartidorRoutes = require('./routes/repartidorRoutes');
+const zonasRoutes = require('./routes/zonasRoutes');
+const direccionesRoutes = require('./routes/direccionesRoutes');
 
 // Usar rutas
 app.use('/api/users', userRoutes);
@@ -33,6 +36,9 @@ app.use('/api/promociones-productos', promoProdRoutes);
 app.use('/api/insumos', insumosRoutes);
 app.use('/api/pedido-detalle', pedidoDetalleRoutes);
 app.use('/api/producto-insumos', productoInsumoRoutes);
+app.use('/api/repartidores', repartidorRoutes);
+app.use('/api/zonas', zonasRoutes);
+app.use('/api/direcciones', direccionesRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 3000;

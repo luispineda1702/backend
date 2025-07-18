@@ -1,17 +1,24 @@
 const db = require('../config/db');
 
-// Obtener todos los pedidos (con usuario y cupón info)
+// Obtener todos los pedidos (con usuario, cupón, dirección y zona)
 exports.getPedidos = (req, res) => {
   const sql = `
-    SELECT p.*, u.nombre AS usuario_nombre, c.titulo AS cupon_titulo
+    SELECT 
+      p.*, 
+      u.nombre AS usuario_nombre, 
+      c.codigo AS cupon_codigo, 
+      d.descripcion AS direccion, 
+      z.nombre AS zona
     FROM pedidos p
     JOIN usuarios u ON p.usuario_id = u.id
     LEFT JOIN cupones c ON p.cupon_id = c.id
-    ORDER BY p.fecha_creacion DESC
+    LEFT JOIN direcciones_usuario d ON p.direccion_id = d.id
+    LEFT JOIN zonas z ON d.zona_id = z.id
+    ORDER BY p.fecha DESC
   `;
 
   db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ error: 'Error al obtener pedidos' });
+    if (err) return res.status(500).json({ error: 'Error al obtener pedidos', detalles: err });
     res.json(results);
   });
 };
@@ -20,39 +27,39 @@ exports.getPedidos = (req, res) => {
 exports.createPedido = (req, res) => {
   const {
     usuario_id,
-    direccion,
-    metodoPago,
+    direccion_id,      // ahora enviamos id de la dirección, no texto
+    metodo_pago,
     total,
-    etapa = 'preparacion',
-    confirmacion = 'No',
+    etapa = 'Preparación',
+    confirmado = 'No',
     cupon_id = null
   } = req.body;
 
   const sql = `
-    INSERT INTO pedidos (usuario_id, direccion, metodoPago, total, etapa, confirmacion, cupon_id, fecha_creacion)
+    INSERT INTO pedidos (usuario_id, direccion_id, metodo_pago, total, etapa, confirmado, cupon_id, fecha)
     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
   `;
 
-  db.query(sql, [usuario_id, direccion, metodoPago, total, etapa, confirmacion, cupon_id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Error al crear pedido' });
+  db.query(sql, [usuario_id, direccion_id, metodo_pago, total, etapa, confirmado, cupon_id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Error al crear pedido', detalles: err });
 
     res.json({ message: 'Pedido creado correctamente', pedido_id: result.insertId });
   });
 };
 
-// Actualizar pedido (puedes actualizar etapa, confirmacion, direccion, metodoPago, total, cupon_id)
+// Actualizar pedido
 exports.updatePedido = (req, res) => {
   const { id } = req.params;
-  const { direccion, metodoPago, total, etapa, confirmacion, cupon_id } = req.body;
+  const { direccion_id, metodo_pago, total, etapa, confirmado, cupon_id } = req.body;
 
   const sql = `
     UPDATE pedidos
-    SET direccion = ?, metodoPago = ?, total = ?, etapa = ?, confirmacion = ?, cupon_id = ?
+    SET direccion_id = ?, metodo_pago = ?, total = ?, etapa = ?, confirmado = ?, cupon_id = ?
     WHERE id = ?
   `;
 
-  db.query(sql, [direccion, metodoPago, total, etapa, confirmacion, cupon_id, id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Error al actualizar pedido' });
+  db.query(sql, [direccion_id, metodo_pago, total, etapa, confirmado, cupon_id, id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Error al actualizar pedido', detalles: err });
 
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Pedido no encontrado' });
 
@@ -67,7 +74,7 @@ exports.deletePedido = (req, res) => {
   const sql = 'DELETE FROM pedidos WHERE id = ?';
 
   db.query(sql, [id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Error al eliminar pedido' });
+    if (err) return res.status(500).json({ error: 'Error al eliminar pedido', detalles: err });
 
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Pedido no encontrado' });
 
