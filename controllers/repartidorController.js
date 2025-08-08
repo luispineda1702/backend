@@ -87,3 +87,84 @@ exports.deleteRepartidor = (req, res) => {
     res.json({ message: 'Repartidor eliminado correctamente' });
   });
 };
+
+// controllers/repartidorController.js
+exports.getRepartidoresDisponiblesPorZona = (req, res) => {
+  const { zonaId } = req.params;
+
+  const sql = `
+    SELECT id, nombre 
+    FROM repartidores 
+    WHERE zona_id = ? AND estado = 'Activo' AND disponible = 'Si'
+  `;
+
+  db.query(sql, [zonaId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Error al obtener repartidores' });
+    res.status(200).json(results);
+  });
+};
+
+exports.actualizarDisponibilidadRepartidor = (req, res) => {
+  const { repartidorId } = req.params;
+  const { disponible } = req.body; // Espera 'Si' o 'No'
+
+  const sql = 'UPDATE repartidores SET disponible = ? WHERE id = ?';
+
+  db.query(sql, [disponible, repartidorId], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Error al actualizar disponibilidad' });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Repartidor no encontrado' });
+
+    res.status(200).json({ message: 'Disponibilidad actualizada correctamente' });
+  });
+};
+
+exports.actualizarEstadoRepartidor = (req, res) => {
+  const { repartidorId } = req.params;
+  const { estado } = req.body; // 'activo' o 'desactivado'
+
+  if (!['activo', 'desactivado'].includes(estado.toLowerCase())) {
+    return res.status(400).json({ error: 'Estado inválido. Debe ser "activo" o "desactivado".' });
+  }
+
+  const sql = 'UPDATE repartidores SET estado = ? WHERE id = ?';
+
+  db.query(sql, [estado.toLowerCase(), repartidorId], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Error al actualizar estado' });
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Repartidor no encontrado' });
+
+    res.status(200).json({ message: 'Estado actualizado correctamente' });
+  });
+};
+
+// controllers/repartidorController.js
+
+exports.loginRepartidor = (req, res) => {
+  const { codigo, clave } = req.body;
+
+  if (!codigo || !clave) {
+    return res.status(400).json({ error: 'Código y clave son obligatorios' });
+  }
+
+  const sql = 'SELECT * FROM repartidores WHERE codigo = ?';
+  db.query(sql, [codigo], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Error en el servidor' });
+    if (results.length === 0) return res.status(401).json({ error: 'Código no registrado' });
+
+    const repartidor = results[0];
+
+    bcrypt.compare(clave, repartidor.clave, (err, isMatch) => {
+      if (err) return res.status(500).json({ error: 'Error al verificar clave' });
+      if (!isMatch) return res.status(401).json({ error: 'Clave incorrecta' });
+
+      res.json({
+        id: repartidor.id,
+        nombre: repartidor.nombre,
+        apellido: repartidor.apellido,
+        codigo: repartidor.codigo,
+        zona_id: repartidor.zona_id,
+        rol: repartidor.rol,
+      });
+    });
+  });
+};
+

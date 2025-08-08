@@ -43,3 +43,37 @@ exports.deletePizza = (req, res) => {
     res.status(200).json({ message: 'Pizza eliminada correctamente' });
   });
 };
+
+
+// Obtener todos los productos
+exports.getAllProductos = async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT * FROM productos');
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener productos' });
+  }
+};
+
+// Obtener productos por tipo (Familiar, Individual)
+exports.getProductosPorTipo = async (req, res) => {
+  const { tipo } = req.params;
+  try {
+    const [rows] = await db.query('SELECT * FROM productos WHERE tipo = ?', [tipo]);
+    res.json(rows);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al filtrar productos' });
+  }
+};
+
+// Obtener pizza por ID
+exports.getPizzaById = (req, res) => {
+  const { id } = req.params;
+  const sql = 'SELECT * FROM pizzas WHERE id = ?';
+  db.query(sql, [id], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Error al obtener la pizza' });
+    if (results.length === 0) return res.status(404).json({ error: 'Pizza no encontrada' });
+
+    res.status(200).json(results[0]);
+  });
+};

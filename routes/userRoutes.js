@@ -14,5 +14,6 @@ router.delete('/:id', userController.deleteUser);
 
 // Nueva ruta para activar / desactivar usuario
 router.patch('/:id/estado', userController.toggleUserState);
+router.get('/:id', userController.getUserById);
 
 module.exports = router;
